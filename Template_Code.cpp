@@ -3,7 +3,16 @@
 #include <vector>
 #include <stack>
 #include <queue>
+#include <chrono>
+#include <iomanip>
 using namespace std;
+
+#define TEST_BILL 300
+#define PRESCRIPTION_BILL 100
+#define GENERAL_WARD_BILL 500
+#define ICU_BILL 3000
+#define PRIVATE_ROOM_BILL 1500
+#define SEMI_PRIVATE_ROOM_BILL 1000
 
 // ========== ENUMERATIONS ========== //
 enum Department {
@@ -51,12 +60,14 @@ public:
 
 
 // ========== PATIENT CLASS ========== //
+
 class Patient {
 private:
     int id;
     string name;
     int age;
     string contact;
+    vector<string> all_contacts;
 
     // Data Structures
     stack<string> medicalHistory;
@@ -71,46 +82,200 @@ private:
 
 public:
     // Constructor
-    Patient(int pid, string n, int a, string c);
+    Patient(int pid, string n, int a, string c)
+    {
+        id = pid;
+        name = n;
+        age = a;
+        contact = c;
+        all_contacts.push_back(c);
+        isAdmitted = false;
+        bill = 0;
+    }
+
+    Patient(int pid, string n, int a, vector<string> contacts)
+    {
+        id = pid;
+        name = n;
+        age = a;
+        all_contacts = contacts;
+    }
 
     // ========== ORIGINAL FEATURES ========== //
 
-    void admitPatient(RoomType type);
-    void dischargePatient();
+    void admitPatient(RoomType type)
+    {
+        if (getAdmissionStatus())
+        {
+            std::cout << "They are already addmitted" << std::endl;
+            return;
+        }
 
-    void addMedicalRecord(string record);
+        roomType = type;
 
-    void requestTest(string testName);
-    string performTest();
+        isAdmitted = true;
 
-    void displayHistory();
+        switch (getRoomType())
+        {
+            case GENERAL_WARD: bill += GENERAL_WARD_BILL; break;
+            case ICU: bill += ICU_BILL; break;
+            case PRIVATE_ROOM: bill += PRIVATE_ROOM_BILL; break;
+            case SEMI_PRIVATE: bill += SEMI_PRIVATE_ROOM_BILL; break;
+        }
+    }
+
+    static auto get_date()
+    {
+        auto now = std::chrono::system_clock::now();
+        return std::chrono::current_zone()->to_local(now);
+    }
+
+    void dischargePatient()
+    {
+        if (getAdmissionStatus())
+        {
+            isAdmitted = false;
+
+            auto current_date = get_date();
+
+            medicalHistory.push(std::format("At {:%Y-%m-%d}: Patient {:2} was discharged", current_date, name));
+        }
+    }
+
+    void addMedicalRecord(string record)
+    {
+        medicalHistory.push(record);
+    }
+
+    void requestTest(string testName)
+    {
+        testQueue.push(testName);
+        medicalHistory.push(std::format("At {:%Y-%m-%d}: Patient {:2} requested the {:3} test", get_date(), name, testName));
+    }
+
+    string performTest()
+    {
+        if (!testQueue.empty())
+        {
+            string t_name = testQueue.front();
+
+            testQueue.pop();
+
+            medicalHistory.push(std::format("At {:%Y-%m-%d}: Patient {:2} finished performing the {:3} test, added {:4} to patient bill", get_date(), name, testQueue.front(), TEST_BILL));
+            addBill(TEST_BILL);
+
+            return format("Test {:1} Performed Successfully", t_name);
+
+        }
+
+        return "Not Test Selected";
+    }
+
+    void displayHistory() const
+    {
+        auto q = medicalHistory;
+
+        for (int i = 0; i < q.size(); ++i)
+        {
+            if (q.empty())
+                return;
+
+            cout << q.top() << endl;
+
+            q.pop();
+        }
+
+        delete &q;
+    }
 
     int getId();
     string getName();
 
-    bool getAdmissionStatus();
+    bool getAdmissionStatus()
+    {
+        return isAdmitted;
+    }
 
 
     // ========== NEW FEATURES ========== //
 
     // Medical Tests
-    void displayPendingTests();
+    void displayPendingTests() const
+    {
+        auto q = testQueue;
+
+        for (int i = 0; i < q.size(); ++i)
+        {
+            if (q.empty())
+                return;
+
+            cout << q.front() << endl;
+
+            q.pop();
+        }
+
+        delete &q;
+    }
 
     // Prescriptions
-    void addPrescription(string medicine);
-    void displayPrescriptions();
+    void addPrescription(string medicine)
+    {
+        prescriptions.push_back(medicine);
+
+        cout << format("At {:%Y-%m-%d}: Patient {:2} took the {:3} medicine", get_date(), name, medicine);
+
+        addBill(PRESCRIPTION_BILL);
+    }
+
+    void displayPrescriptions() const {
+
+        for (int i = 0; i < prescriptions.size(); ++i)
+        {
+            if (prescriptions.empty())
+                return;
+
+            cout << prescriptions.at(i) << endl;
+
+        }
+    }
 
     // Billing
-    void addBill(double amount);
-    double getBill();
-    void displayBill();
+    void addBill(double amount) { bill += amount; }
+
+    double getBill() const { return bill; }
+
+    void displayBill() { cout << format("Patient {:1} is required to pay {:2}", name, bill) << endl; }
 
     // Additional Getters
-    int getAge();
-    string getContact();
-    RoomType getRoomType();
-};
+    int getAge() { return age; }
 
+    string getContact() { return contact; }
+
+    void displayAllContacts()
+    {
+        if (all_contacts.empty()) {
+
+            std::cout << "No contacts found." << std::endl;
+
+            return;
+        }
+
+        for (int i = 0; i < all_contacts.size(); ++i) {
+
+            std::cout << i + 1 << ". " << all_contacts[i] << std::endl;
+        }
+    }
+
+    vector<string> getAllContact()
+    {
+        return all_contacts;
+    }
+
+    RoomType getRoomType()
+    {
+        return roomType;
+    }
+};
 
 // ========== DOCTOR CLASS ========== //
 class Doctor {
