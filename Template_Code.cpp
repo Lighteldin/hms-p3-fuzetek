@@ -5,6 +5,7 @@
 #include <queue>
 using namespace std;
 
+
 // ========== ENUMERATIONS ========== //
 enum Department {
     CARDIOLOGY,
@@ -71,24 +72,81 @@ private:
 
 public:
     // Constructor
-    Patient(int pid, string n, int a, string c);
+    Patient(int pid, string n, int a, string c){
+        id = pid;
+        name = n;
+        age = a;
+        contact = c;
+        isAdmitted = false;
+        bill = 0;
+        // roomType intentionally left uninitialized — only meaningful once admitted, per SRS §3.2
+    }
 
     // ========== ORIGINAL FEATURES ========== //
 
-    void admitPatient(RoomType type);
-    void dischargePatient();
+    void admitPatient(RoomType type) {
+    if (isAdmitted) {
+        cout << "Patient is already admitted." << endl;
+        return;
+    }
 
-    void addMedicalRecord(string record);
+    isAdmitted = true;
+    roomType = type;
+    addMedicalRecord("Patient admitted to hospital");
+
+    switch (type) {
+        case GENERAL_WARD:
+            bill += 500;
+            break;
+        case ICU:
+            bill += 3000;
+            break;
+        case PRIVATE_ROOM:
+            bill += 1500;
+            break;
+        case SEMI_PRIVATE:
+            bill += 1000;
+            break;
+    }
+}
+    void dischargePatient() {
+    if (!isAdmitted) {
+        cout << "Patient is not currently admitted." << endl;
+        return;
+    }
+
+    isAdmitted = false;
+    addMedicalRecord("Patient discharged from hospital");
+}
+
+    void addMedicalRecord(string record) {
+        medicalHistory.push(record);
+    }
 
     void requestTest(string testName);
     string performTest();
 
-    void displayHistory();
+    void displayHistory() {
+        cout << "Medical History for " << name << " (ID: " << id << "):" << endl;
 
-    int getId();
-    string getName();
+        stack<string> temp = medicalHistory;
 
-    bool getAdmissionStatus();
+        while (!temp.empty()) {
+            cout << "- " << temp.top() << endl;
+            temp.pop();
+        }
+    }
+
+    int getId(){
+        return id;
+    }
+    string getName(){
+        return name;
+    }
+
+    bool getAdmissionStatus() {
+        return isAdmitted;
+    }
 
 
     // ========== NEW FEATURES ========== //
@@ -96,21 +154,27 @@ public:
     // Medical Tests
     void displayPendingTests();
 
+
     // Prescriptions
     void addPrescription(string medicine);
     void displayPrescriptions();
 
-    // Billing
+    // Billing 
     void addBill(double amount);
     double getBill();
     void displayBill();
 
     // Additional Getters
-    int getAge();
-    string getContact();
-    RoomType getRoomType();
+    int getAge(){
+        return age;
+    }
+    string getContact(){
+        return contact;
+    }
+    RoomType getRoomType(){
+        return roomType;
+    }
 };
-
 
 // ========== DOCTOR CLASS ========== //
 class Doctor {
