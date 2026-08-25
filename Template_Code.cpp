@@ -3,16 +3,8 @@
 #include <vector>
 #include <stack>
 #include <queue>
-#include <chrono>
-#include <iomanip>
 using namespace std;
 
-#define TEST_BILL 300
-#define PRESCRIPTION_BILL 100
-#define GENERAL_WARD_BILL 500
-#define ICU_BILL 3000
-#define PRIVATE_ROOM_BILL 1500
-#define SEMI_PRIVATE_ROOM_BILL 1000
 
 // ========== ENUMERATIONS ========== //
 enum Department {
