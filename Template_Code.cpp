@@ -434,12 +434,34 @@ public:
 
     void displayPatientInfo(
         int patientId
-    );
+    ) {
+        Patient* p = findPatient(patientId);
+        if (p == nullptr) {
+            cout << "Patient with ID " << patientId << " not found." << endl;
+            return;
+        }
+
+        cout << "Patient Information:" << endl;
+        cout << "ID: " << p->getId() << endl;
+        cout << "Name: " << p->getName() << endl;
+        cout << "Admission Status: " << (p->getAdmissionStatus() ? "Admitted" : "Not Admitted") << endl;
+        p->displayHistory();
+    }
 
     void displayDoctorInfo(
         int doctorId
-    );
+    ){
+        Doctor* d = findDoctor(doctorId);
+        if (d == nullptr) {
+            cout << "Doctor with ID " << doctorId << " not found." << endl;
+            return;
+        }
 
+        cout << "Doctor Information:" << endl;
+        cout << "ID: " << d->getId() << endl;
+        cout << "Name: " << d->getName() << endl;
+        cout << "Department: " << d->getDepartment() << endl;
+    }
 
     // =====================================================
     // NEW FEATURE 1
@@ -448,7 +470,14 @@ public:
 
     Patient* findPatient(
         int patientId
-    );
+    ){
+        for (Patient& p : patients) {
+            if (p.getId() == patientId) {
+                return &p;
+            }
+        }
+        return nullptr;
+    }
 
 
     // =====================================================
@@ -458,7 +487,14 @@ public:
 
     Doctor* findDoctor(
         int doctorId
-    );
+    ){
+        for (Doctor& d : doctors) {
+            if (d.getId() == doctorId) {
+                return &d;
+            }
+        }
+        return nullptr;
+    }
 
 
     // =====================================================
@@ -468,7 +504,25 @@ public:
 
     void searchPatientByName(
         string name
-    );
+    ){
+        bool found = false;
+
+        for (Patient &p : patients) {
+            if (p.getName() == name) {
+                found = true;
+                cout << "Patient Found:" << endl;
+                cout << "ID: " << p.getId() << endl;
+                cout << "Name: " << p.getName() << endl;
+                cout << "Age: " << p.getAge() << endl;
+                cout << "Contact: " << p.getContact() << endl;
+            }
+        }
+
+        if (!found) {
+            cout << "No patient found with the name: " << name << endl;
+        }
+
+    }
 
 
     // =====================================================
@@ -478,7 +532,21 @@ public:
 
     void dischargePatient(
         int patientId
-    );
+    ) {
+        Patient* p = findPatient(patientId);
+        if (p == nullptr) {
+            cout << "Patient not found." << endl;
+            return;
+        }
+
+        if (!p->getAdmissionStatus()) {
+            cout << "Patient is not currently admitted." << endl;
+            return;
+        }
+
+        p->dischargePatient();
+        cout << "Patient discharged successfully." << endl;
+    }
 
 
     // =====================================================
@@ -489,7 +557,16 @@ public:
     void requestPatientTest(
         int patientId,
         string testName
-    );
+    ){
+        Patient* p = findPatient(patientId);
+        if (p == nullptr) {
+            cout << "Patient not found." << endl;
+            return;
+        }
+
+        p->requestTest(testName);
+        cout << "Test requested successfully." << endl;
+    }
 
 
     // =====================================================
@@ -499,7 +576,17 @@ public:
 
     void performPatientTest(
         int patientId
-    );
+    ) {
+        Patient* p = findPatient(patientId);
+        if (p == nullptr) {
+            cout << "Patient not found." << endl;
+            return;
+        }
+
+        cout << "Performing first test:" << endl;
+        string result = p->performTest();
+        cout << "Test result/action: " << result << endl;
+    }
 
 
     // =====================================================
@@ -509,7 +596,15 @@ public:
 
     void displayPatientTests(
         int patientId
-    );
+    ) {
+        Patient* p = findPatient(patientId);
+        if (p == nullptr) {
+            cout << "Patient not found." << endl;
+            return;
+        }
+
+        p->displayPendingTests();
+    }
 
 
     // =====================================================
@@ -520,7 +615,16 @@ public:
     void prescribeMedicine(
         int patientId,
         string medicine
-    );
+    ) {
+        Patient* p = findPatient(patientId);
+        if (p == nullptr) {
+            cout << "Patient not found." << endl;
+            return;
+        }
+
+        p->addPrescription(medicine);
+        cout << "Medicine prescribed successfully." << endl;
+    }
 
 
     // =====================================================
@@ -530,7 +634,15 @@ public:
 
     void displayPrescriptions(
         int patientId
-    );
+    ) {
+        Patient* p = findPatient(patientId);
+        if (p == nullptr) {
+            cout << "Patient not found." << endl;
+            return;
+        }
+
+        p->displayPrescriptions();
+    }
 
 
     // =====================================================
@@ -540,7 +652,15 @@ public:
 
     void displayPatientBill(
         int patientId
-    );
+    ) {
+        Patient* p = findPatient(patientId);
+        if (p == nullptr) {
+            cout << "Patient not found." << endl;
+            return;
+        }
+
+        p->displayBill();
+    }
 
 
     // =====================================================
@@ -594,7 +714,20 @@ public:
 
     bool isRoomAvailable(
         RoomType type
-    );
+    ) {
+        switch (type) {
+            case GENERAL_WARD:
+                return generalRooms > 0;
+            case ICU:
+                return icuRooms > 0;
+            case PRIVATE_ROOM:
+                return privateRooms > 0;
+            case SEMI_PRIVATE:
+                return semiPrivateRooms > 0;
+            default:
+                return false;
+        }
+    }
 
 
     // =====================================================
@@ -602,7 +735,14 @@ public:
     // Display Room Status
     // ===================================================== //
 
-    void displayRoomStatus();
+    void displayRoomStatus() {
+        cout << "========== ROOM STATUS ==========" << endl;
+        cout << "General Ward: " << generalRooms << endl;
+        cout << "ICU: " << icuRooms << endl;
+        cout << "Private Rooms: " << privateRooms << endl;
+        cout << "Semi Private Rooms: " << semiPrivateRooms << endl;
+        cout << "=================================" << endl;
+    }
 
 
     // =====================================================
@@ -610,7 +750,16 @@ public:
     // Display All Patients
     // ===================================================== //
 
-    void displayAllPatients();
+    void displayAllPatients() {
+    cout << "========== ALL PATIENTS ==========" << endl;
+        for (Patient &p : patients) {
+            cout << "ID: " << p.getId()
+                << " | Name: " << p.getName()
+                << " | Age: " << p.getAge()
+                << " | Status: " << (p.getAdmissionStatus() ? "Admitted" : "Not Admitted")
+                << endl;
+        }
+    }
 
 
     // =====================================================
@@ -618,7 +767,16 @@ public:
     // Display All Doctors
     // ===================================================== //
 
-    void displayAllDoctors();
+    void displayAllDoctors() {
+        cout << "========== ALL DOCTORS ==========" << endl;
+        for (Doctor &d : doctors) {
+            cout << "ID: " << d.getId()
+                << " | Name: " << d.getName()
+                << " | Department: " << d.getDepartment()
+                << " | Appointments: " << d.getAppointmentCount()
+                << endl;
+        }
+    }
 
 
     // =====================================================
@@ -687,7 +845,26 @@ public:
     // Hospital Statistics
     // ===================================================== //
 
-    void displayStatistics();
+    void displayStatistics(){
+        int admittedCount = 0;
+        double totalBills = 0;
+
+        for (Patient &p : patients) {
+            if (p.getAdmissionStatus()) {
+                admittedCount++;
+            }
+            totalBills += p.getBill();
+        }
+
+        cout << "========== HOSPITAL STATISTICS ==========" << endl;
+        cout << "Total Patients: " << patients.size() << endl;
+        cout << "Total Doctors: " << doctors.size() << endl;
+        cout << "Admitted Patients: " << admittedCount << endl;
+        cout << "Waiting Emergencies: " << emergencyQueue.size() << endl;
+        cout << "Priority Emergencies: " << priorityEmergencyQueue.size() << endl;
+        cout << "Total Generated Bills: $" << totalBills << endl;
+        cout << "=========================================" << endl;
+    }
 };
 
 
