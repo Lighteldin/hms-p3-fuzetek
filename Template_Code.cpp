@@ -60,14 +60,12 @@ public:
 
 
 // ========== PATIENT CLASS ========== //
-
 class Patient {
 private:
     int id;
     string name;
     int age;
     string contact;
-    vector<string> all_contacts;
 
     // Data Structures
     stack<string> medicalHistory;
@@ -82,117 +80,79 @@ private:
 
 public:
     // Constructor
-    Patient(int pid, string n, int a, string c)
-    {
+    Patient(int pid, string n, int a, string c){
         id = pid;
         name = n;
         age = a;
         contact = c;
-        all_contacts.push_back(c);
         isAdmitted = false;
         bill = 0;
-    }
-
-    Patient(int pid, string n, int a, vector<string> contacts)
-    {
-        id = pid;
-        name = n;
-        age = a;
-        all_contacts = contacts;
+        // roomType intentionally left uninitialized — only meaningful once admitted, per SRS §3.2
     }
 
     // ========== ORIGINAL FEATURES ========== //
 
-    void admitPatient(RoomType type)
-    {
-        if (getAdmissionStatus())
-        {
-            std::cout << "They are already addmitted" << std::endl;
-            return;
-        }
-
-        roomType = type;
-
-        isAdmitted = true;
-
-        switch (getRoomType())
-        {
-            case GENERAL_WARD: bill += GENERAL_WARD_BILL; break;
-            case ICU: bill += ICU_BILL; break;
-            case PRIVATE_ROOM: bill += PRIVATE_ROOM_BILL; break;
-            case SEMI_PRIVATE: bill += SEMI_PRIVATE_ROOM_BILL; break;
-        }
+    void admitPatient(RoomType type) {
+    if (isAdmitted) {
+        cout << "Patient is already admitted." << endl;
+        return;
     }
 
-    static auto get_date()
-    {
-        auto now = std::chrono::system_clock::now();
-        return std::chrono::current_zone()->to_local(now);
+    isAdmitted = true;
+    roomType = type;
+    addMedicalRecord("Patient admitted to hospital");
+
+    switch (type) {
+        case GENERAL_WARD:
+            bill += 500;
+            break;
+        case ICU:
+            bill += 3000;
+            break;
+        case PRIVATE_ROOM:
+            bill += 1500;
+            break;
+        case SEMI_PRIVATE:
+            bill += 1000;
+            break;
+    }
+}
+    void dischargePatient() {
+    if (!isAdmitted) {
+        cout << "Patient is not currently admitted." << endl;
+        return;
     }
 
-    void dischargePatient()
-    {
-        if (getAdmissionStatus())
-        {
-            isAdmitted = false;
+    isAdmitted = false;
+    addMedicalRecord("Patient discharged from hospital");
+}
 
-            auto current_date = get_date();
-
-            medicalHistory.push(std::format("At {:%Y-%m-%d}: Patient {:2} was discharged", current_date, name));
-        }
-    }
-
-    void addMedicalRecord(string record)
-    {
+    void addMedicalRecord(string record) {
         medicalHistory.push(record);
     }
 
-    void requestTest(string testName)
-    {
-        testQueue.push(testName);
-        medicalHistory.push(std::format("At {:%Y-%m-%d}: Patient {:2} requested the {:3} test", get_date(), name, testName));
-    }
+    void requestTest(string testName);
+    string performTest();
 
-    string performTest()
-    {
-        if (!testQueue.empty())
-        {
-            string t_name = testQueue.front();
+    void displayHistory() {
+        cout << "Medical History for " << name << " (ID: " << id << "):" << endl;
 
-            testQueue.pop();
+        stack<string> temp = medicalHistory;
 
-            medicalHistory.push(std::format("At {:%Y-%m-%d}: Patient {:2} finished performing the {:3} test, added {:4} to patient bill", get_date(), name, testQueue.front(), TEST_BILL));
-            addBill(TEST_BILL);
-
-            return format("Test {:1} Performed Successfully", t_name);
-
+        while (!temp.empty()) {
+            cout << "- " << temp.top() << endl;
+            temp.pop();
         }
-
-        return "Not Test Selected";
     }
 
-    void displayHistory() const
-    {
-        auto q = medicalHistory;
-
-        for (int i = 0; i < q.size(); ++i)
-        {
-            if (q.empty())
-                return;
-
-            cout << q.top() << endl;
-
-            q.pop();
-        }
-
-        delete &q;
+    int getId(){
+        return id;
+    }
+    string getName(){
+        return name;
     }
 
-    int getId();
-    string getName();
-
-    bool getAdmissionStatus()
-    {
+    bool getAdmissionStatus() {
         return isAdmitted;
     }
 
@@ -200,79 +160,26 @@ public:
     // ========== NEW FEATURES ========== //
 
     // Medical Tests
-    void displayPendingTests() const
-    {
-        auto q = testQueue;
+    void displayPendingTests();
 
-        for (int i = 0; i < q.size(); ++i)
-        {
-            if (q.empty())
-                return;
-
-            cout << q.front() << endl;
-
-            q.pop();
-        }
-
-        delete &q;
-    }
 
     // Prescriptions
-    void addPrescription(string medicine)
-    {
-        prescriptions.push_back(medicine);
+    void addPrescription(string medicine);
+    void displayPrescriptions();
 
-        cout << format("At {:%Y-%m-%d}: Patient {:2} took the {:3} medicine", get_date(), name, medicine);
-
-        addBill(PRESCRIPTION_BILL);
-    }
-
-    void displayPrescriptions() const {
-
-        for (int i = 0; i < prescriptions.size(); ++i)
-        {
-            if (prescriptions.empty())
-                return;
-
-            cout << prescriptions.at(i) << endl;
-
-        }
-    }
-
-    // Billing
-    void addBill(double amount) { bill += amount; }
-
-    double getBill() const { return bill; }
-
-    void displayBill() { cout << format("Patient {:1} is required to pay {:2}", name, bill) << endl; }
+    // Billing 
+    void addBill(double amount);
+    double getBill();
+    void displayBill();
 
     // Additional Getters
-    int getAge() { return age; }
-
-    string getContact() { return contact; }
-
-    void displayAllContacts()
-    {
-        if (all_contacts.empty()) {
-
-            std::cout << "No contacts found." << std::endl;
-
-            return;
-        }
-
-        for (int i = 0; i < all_contacts.size(); ++i) {
-
-            std::cout << i + 1 << ". " << all_contacts[i] << std::endl;
-        }
+    int getAge(){
+        return age;
     }
-
-    vector<string> getAllContact()
-    {
-        return all_contacts;
+    string getContact(){
+        return contact;
     }
-
-    RoomType getRoomType()
-    {
+    RoomType getRoomType(){
         return roomType;
     }
 };
