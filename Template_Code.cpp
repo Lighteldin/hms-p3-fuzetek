@@ -192,6 +192,8 @@ public:
             return;
         }
 
+        cout << "Prescriptions:" << endl;
+
         for (string &med : prescriptions) {
             cout << "- " << med << endl;
         }
@@ -650,7 +652,7 @@ public:
             cout << "Patient not found." << endl;
             return;
         }
-
+        
         p->displayPendingTests();
     }
 
