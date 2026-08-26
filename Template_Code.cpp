@@ -123,8 +123,24 @@ public:
         medicalHistory.push(record);
     }
 
-    void requestTest(string testName);
-    string performTest();
+    void requestTest(string testName) {
+        testQueue.push(testName);
+        addMedicalRecord("Test requested: " + testName);
+    }
+
+    string performTest() {
+        if (testQueue.empty()) {
+            return "No tests pending";
+        }
+
+        string testName = testQueue.front();
+        testQueue.pop();
+
+        addMedicalRecord("Test performed: " + testName);
+        addBill(300);
+
+        return testName;
+    }
 
     void displayHistory() {
         cout << "Medical History for " << name << " (ID: " << id << "):" << endl;
@@ -152,17 +168,49 @@ public:
     // ========== NEW FEATURES ========== //
 
     // Medical Tests
-    void displayPendingTests();
+    void displayPendingTests() {
+        cout << "Pending Tests:" << endl;
+
+        queue<string> temp = testQueue;
+
+        while (!temp.empty()) {
+            cout << "- " << temp.front() << endl;
+            temp.pop();
+        }
+    }
 
 
     // Prescriptions
-    void addPrescription(string medicine);
-    void displayPrescriptions();
+    void addPrescription(string medicine) {
+        prescriptions.push_back(medicine);
+        addMedicalRecord("Prescription added: " + medicine);
+        addBill(100);
+    }
+    void displayPrescriptions(){
+        if (prescriptions.empty()) {
+            cout << "No prescriptions." << endl;
+            return;
+        }
+
+        for (string &med : prescriptions) {
+            cout << "- " << med << endl;
+        }
+    }
 
     // Billing 
-    void addBill(double amount);
-    double getBill();
-    void displayBill();
+    void addBill(double amount) {
+        bill += amount;
+    }
+    double getBill() {
+        return bill;
+    }
+    void displayBill() {
+        cout << "========== PATIENT BILL ==========" << endl;
+        cout << "Patient ID: " << id << endl;
+        cout << "Patient Name: " << name << endl;
+        cout << "Total Bill: $" << bill << endl;
+        cout << "==================================" << endl;
+    }
 
     // Additional Getters
     int getAge(){
